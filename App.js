@@ -13,9 +13,7 @@ const App = () => {
   useEffect(() => {
     offlineClient.init().then(() => setInitialized(true));
   }, []);
-  const hydrate = async () => {
-    await client.init();
-  };
+
   if (!initialized) {
     return (
       <View style={styles.container}>

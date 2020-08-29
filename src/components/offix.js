@@ -4,7 +4,8 @@ import AsyncStorage from '@react-native-community/async-storage';
 // import NetInfo from "@react-native-community/netinfo"
 import {ApolloOfflineClient} from 'offix-client';
 import {ReactNativeNetworkStatus} from './NetworkStatus';
-
+import {CacheOperation, getUpdateFunction} from 'offix-cache';
+import {GET_REPOS} from './List';
 const cacheStorage = {
   getItem: async (key) => {
     const data = await AsyncStorage.getItem(key);
@@ -29,7 +30,24 @@ const cacheStorage = {
 };
 
 const networkStatus = new ReactNativeNetworkStatus();
-
+const options = {
+  updateQuery: GET_REPOS,
+  returnType: 'Repo',
+};
+export const reposUpdate = {
+  addStar: getUpdateFunction({
+    mutationName: 'addStar',
+    idField: 'id',
+    operationType: CacheOperation.ADD,
+    ...options,
+  }),
+  removeStar: getUpdateFunction({
+    mutationName: 'removeStar',
+    idField: 'id',
+    operationType: CacheOperation.ADD,
+    ...options,
+  }),
+};
 export const offlineClient = new ApolloOfflineClient({
   cache: new InMemoryCache(),
   link: new HttpLink({
@@ -41,4 +59,6 @@ export const offlineClient = new ApolloOfflineClient({
   offlineStorage: cacheStorage,
   cacheStorage,
   networkStatus,
+  mutationCacheUpdates: reposUpdate,
+  retryOptions: {attempts: {max: 100}, delay: {initial: 1000}},
 });

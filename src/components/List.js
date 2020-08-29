@@ -11,7 +11,7 @@ import {useQuery, gql} from '@apollo/client';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {useOfflineMutation} from 'react-offix-hooks';
 const {width, height} = Dimensions.get('screen');
-const GET_REPOS = gql`
+export const GET_REPOS = gql`
   {
     viewer {
       repositories(
