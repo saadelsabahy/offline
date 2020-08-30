@@ -10,6 +10,7 @@ import {
 import { useQuery, gql } from '@apollo/client';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useOfflineMutation } from 'react-offix-hooks';
+import { ReactNativeNetworkStatus } from './NetworkStatus';
 const { width, height } = Dimensions.get('screen');
 export const GET_REPOS = gql`
    {
@@ -59,6 +60,8 @@ const REMOVE_STAR = gql`
    }
 `;
 const List = () => {
+   const networkStatus = new ReactNativeNetworkStatus();
+
    const { loading, error, data, refetch } = useQuery(GET_REPOS, {});
    const [
       starRepo,
@@ -87,12 +90,12 @@ const List = () => {
    useEffect(() => {
       reftchRepos();
       return () => {};
-   }, []);
+   }, [reftchList]);
    const reftchRepos = async () => {
       await refetch();
       setreftchList(!reftchList);
    };
-   console.log(reftchList);
+   console.log('reftchList', reftchList);
    return (
       <View style={styles.container}>
          {loading && <Text style={styles.textStyle}>loading...</Text>}
