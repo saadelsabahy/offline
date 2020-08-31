@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useContext } from 'react';
 import {
    View,
    Text,
@@ -10,7 +10,7 @@ import {
 import { useQuery, gql } from '@apollo/client';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useOfflineMutation } from 'react-offix-hooks';
-import { ReactNativeNetworkStatus } from './NetworkStatus';
+import NetworkProvider, { NetworkContext } from './networkProvider';
 const { width, height } = Dimensions.get('screen');
 export const GET_REPOS = gql`
    {
@@ -60,8 +60,8 @@ const REMOVE_STAR = gql`
    }
 `;
 const List = () => {
-   const networkStatus = new ReactNativeNetworkStatus();
-
+   const { isConnected } = useContext(NetworkContext);
+   console.log('NetworkStatus', isConnected);
    const { loading, error, data, refetch } = useQuery(GET_REPOS, {});
    const [
       starRepo,
@@ -90,16 +90,16 @@ const List = () => {
    useEffect(() => {
       reftchRepos();
       return () => {};
-   }, [reftchList]);
+   }, [reftchList, isConnected]);
    const reftchRepos = async () => {
       await refetch();
-      setreftchList(!reftchList);
+      setreftchList(false);
    };
-   console.log('reftchList', reftchList);
+
    return (
       <View style={styles.container}>
          {loading && <Text style={styles.textStyle}>loading...</Text>}
-         {error && <Text style={styles.textStyle}>oops ...</Text>}
+         {error && !data && <Text style={styles.textStyle}>oops ...</Text>}
          {data?.viewer?.repositories?.nodes && (
             <View style={{ flex: 1 }}>
                <FlatList
