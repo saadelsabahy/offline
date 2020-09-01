@@ -8,6 +8,7 @@ import { ApolloOfflineClient } from 'offix-client';
 import { clientConfig } from './src/components/offix';
 import { useNetInfo } from '@react-native-community/netinfo';
 import NetworkProvider from './src/components/networkProvider';
+import RNBootSplash from 'react-native-bootsplash';
 const client = new ApolloOfflineClient(clientConfig);
 const App = () => {
    const { isConnected } = useNetInfo();
@@ -17,7 +18,13 @@ const App = () => {
 
    // initialize the offix client and set the apollo client
    useEffect(() => {
-      client.init().then(() => setInitialized(true));
+      client
+         .init()
+         .then(() => {
+            setInitialized(true);
+            RNBootSplash.hide({ duration: 250 });
+         })
+         .catch((e) => console.log('initiate offine error', e));
       client.queue.entries.length && isConnected
          ? ToastAndroid.show(
               'syncing your offline data.. !',

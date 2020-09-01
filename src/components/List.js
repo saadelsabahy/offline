@@ -61,7 +61,7 @@ const REMOVE_STAR = gql`
 `;
 const List = () => {
    const { isConnected } = useContext(NetworkContext);
-   console.log('NetworkStatus', isConnected);
+
    const { loading, error, data, refetch } = useQuery(GET_REPOS, {});
    const [
       starRepo,
@@ -101,7 +101,7 @@ const List = () => {
          {loading && <Text style={styles.textStyle}>loading...</Text>}
          {error && !data && <Text style={styles.textStyle}>oops ...</Text>}
          {data?.viewer?.repositories?.nodes && (
-            <View style={{ flex: 1 }}>
+            <View style={{ flex: 1, paddingVertical: 5 }}>
                <FlatList
                   data={data.viewer.repositories.nodes}
                   keyExtractor={(item, index) => `${item.id}`}
@@ -135,7 +135,7 @@ const List = () => {
                                     borderRadius: 50 / 2,
                                     justifyContent: 'center',
                                     alignItems: 'center',
-                                    backgroundColor: '#999999',
+                                    backgroundColor: '#f6f6f6',
                                  }}>
                                  <Icon
                                     name={totalCount ? 'star' : 'star-outline'}
@@ -164,6 +164,7 @@ const styles = StyleSheet.create({
       flex: 1,
       justifyContent: 'center',
       alignItems: 'center',
+      backgroundColor: '#fff',
    },
    textStyle: {
       fontSize: 17,
@@ -171,14 +172,15 @@ const styles = StyleSheet.create({
    },
    card: {
       width: width - 20,
-      height: 100,
-      backgroundColor: '#ddd',
+      height: 80,
+      backgroundColor: '#eee',
       marginVertical: 5,
       padding: 10,
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
       borderRadius: 10,
+      elevation: 3,
    },
 });
 
