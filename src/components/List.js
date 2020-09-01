@@ -6,6 +6,7 @@ import {
    FlatList,
    Dimensions,
    TouchableOpacity,
+   RefreshControl,
 } from 'react-native';
 import { useQuery, gql } from '@apollo/client';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -61,7 +62,7 @@ const REMOVE_STAR = gql`
 `;
 const List = () => {
    const { isConnected } = useContext(NetworkContext);
-
+   const [refreshing, setrefreshing] = useState(false);
    const { loading, error, data, refetch } = useQuery(GET_REPOS, {});
    const [
       starRepo,
@@ -95,10 +96,16 @@ const List = () => {
       await refetch();
       setreftchList(false);
    };
-
+   const handleRefresh = async () => {
+      setrefreshing(true);
+      await reftchRepos();
+      setrefreshing(false);
+   };
    return (
       <View style={styles.container}>
-         {loading && <Text style={styles.textStyle}>loading...</Text>}
+         {(loading || refreshing) && (
+            <Text style={styles.textStyle}>loading...</Text>
+         )}
          {error && !data && <Text style={styles.textStyle}>oops ...</Text>}
          {data?.viewer?.repositories?.nodes && (
             <View style={{ flex: 1, paddingVertical: 5 }}>
@@ -153,6 +160,13 @@ const List = () => {
                         </View>
                      );
                   }}
+                  refreshControl={
+                     <RefreshControl
+                        refreshing={refreshing}
+                        onRefresh={handleRefresh}
+                        colors={['#000']}
+                     />
+                  }
                />
             </View>
          )}
