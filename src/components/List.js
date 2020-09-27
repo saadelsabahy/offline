@@ -63,7 +63,10 @@ const REMOVE_STAR = gql`
 const List = () => {
   const {isConnected} = useContext(NetworkContext);
   const [refreshing, setrefreshing] = useState(false);
-  const {loading, error, data, refetch} = useQuery(GET_REPOS, {});
+  const {loading, error, data, refetch} = useQuery(GET_REPOS, {
+    fetchPolicy: 'cache-and-network',
+    notifyOnNetworkStatusChange: true,
+  });
   const [starRepo, {data: mutationData, error: starError}] = useOfflineMutation(
     ADD_STAR,
     {
@@ -76,37 +79,116 @@ const List = () => {
     awaitRefetchQueries: true,
   });
 
-  const starThSelectedRepo = (id, totalCount) => {
+  const starThSelectedRepo = (
+    {id, totalCount, createdAt, isPrivate, name},
+    index,
+  ) => {
     if (totalCount) {
+      const updatedRepo = {
+        id,
+        totalCount: totalCount - 1,
+        createdAt,
+        isPrivate,
+        name,
+        __typename: 'StargazerConnection',
+      };
+      // data[index] = updatedRepo;
       unStarRepo({
         variables: {id},
-      });
+        optimisticResponse: {
+          removeStar: {
+            starrable: {
+              stargazers: {
+                nodes: updatedRepo,
+                ...updatedRepo,
+              },
+              __typename: 'Repository',
+            },
+            __typename: 'RemoveStarPayload',
+          },
+        },
+        update: (
+          cache,
+          {
+            data: {
+              removeStar: {
+                starrable: {
+                  stargazers: {nodes},
+                },
+              },
+            },
+          },
+        ) => {
+          try {
+            // console.log(data);
+            const data = cache.readQuery({query: GET_REPOS});
+
+            const {
+              viewer: {
+                __typename: viewerTypeName,
+                repositories: {
+                  nodes: cacheNodes,
+                  __typename: repositoriesTypeName,
+                },
+              },
+            } = data;
+
+            const newRepos = cacheNodes.map((t) => {
+              if (t.id === id) {
+                return {
+                  ...t,
+                  stargazers: {...t.stargazers, totalCount: +totalCount - 1},
+                };
+              } else {
+                return t;
+              }
+            });
+            console.log({newRepos});
+            cache.writeQuery({
+              query: GET_REPOS,
+              data: {
+                viewer: {
+                  __typename: viewerTypeName,
+                  repositories: {
+                    __typename: repositoriesTypeName,
+                    nodes: newRepos,
+                  },
+                },
+              },
+            });
+          } catch (error) {
+            console.log('update error', error);
+          }
+        },
+      })
+        .then((res) => console.log('unstar success,', res))
+        .catch((e) => console.log('offline update error', error));
     } else {
       starRepo({
         variables: {id},
       });
     }
   };
-  console.log('isConnected', isConnected);
+
   const [reftchList, setreftchList] = useState(true);
   useEffect(() => {
     reftchRepos();
     return () => {};
   }, [reftchList, isConnected]);
+  // console.log({data});
   const reftchRepos = async () => {
     await refetch();
-    setreftchList(!reftchList);
+    setreftchList(false);
   };
   const handleRefresh = async () => {
     setrefreshing(true);
     await reftchRepos();
     setrefreshing(false);
   };
+  console.log({loading});
   return (
     <View style={styles.container}>
-      {(loading || refreshing) && (
-        <Text style={styles.textStyle}>loading...</Text>
-      )}
+      {loading && <Text style={styles.textStyle}>loading...</Text>}
       {error && !data && <Text style={styles.textStyle}>oops ...</Text>}
       {data?.viewer?.repositories?.nodes && (
         <View style={{flex: 1, paddingVertical: 5}}>
@@ -119,6 +201,8 @@ const List = () => {
                 name,
                 stargazers: {totalCount},
                 id,
+                createdAt,
+                isPrivate,
               },
               index,
             }) => {
@@ -134,7 +218,18 @@ const List = () => {
                       height: '100%',
                     }}>
                     <TouchableOpacity
-                      onPress={() => starThSelectedRepo(id, totalCount)}
+                      onPress={() =>
+                        starThSelectedRepo(
+                          {
+                            id,
+                            totalCount,
+                            createdAt,
+                            isPrivate,
+                            name,
+                          },
+                          index,
+                        )
+                      }
                       style={{
                         width: 50,
                         height: 50,
@@ -146,7 +241,18 @@ const List = () => {
                       <Icon
                         name={totalCount ? 'star' : 'star-outline'}
                         size={30}
-                        onPress={() => starThSelectedRepo(id, totalCount)}
+                        onPress={() =>
+                          starThSelectedRepo(
+                            {
+                              id,
+                              totalCount,
+                              createdAt,
+                              isPrivate,
+                              name,
+                            },
+                            index,
+                          )
+                        }
                       />
                     </TouchableOpacity>
                     <Text style={{fontSize: 20, marginHorizontal: 10}}>

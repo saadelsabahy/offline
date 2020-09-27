@@ -136,5 +136,5 @@ export const clientConfig = {
   offlineStorage: cacheStorage,
   cacheStorage,
   networkStatus,
-  retryOptions: {attempts: {max: 100}, delay: {initial: 1000}},
+  // retryOptions: {attempts: {max: 100}, delay: {initial: 1000}},
 };
