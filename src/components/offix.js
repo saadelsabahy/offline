@@ -76,6 +76,7 @@ import {getMainDefinition} from 'apollo-utilities';
 import AsyncStorage from '@react-native-community/async-storage';
 import {Platform} from 'react-native';
 import {ReactNativeNetworkStatus} from './NetworkStatus';
+import {reposAddAndRemoveStar} from './RestoreOfflineUpdates';
 
 const appDomain =
   Platform.OS === 'ios' ? 'localhost:4000' : '192.168.1.10:4000';
@@ -136,5 +137,6 @@ export const clientConfig = {
   offlineStorage: cacheStorage,
   cacheStorage,
   networkStatus,
+  mutationCacheUpdates: reposAddAndRemoveStar,
   // retryOptions: {attempts: {max: 100}, delay: {initial: 1000}},
 };

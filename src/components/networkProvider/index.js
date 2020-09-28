@@ -4,6 +4,7 @@ export const NetworkContext = React.createContext();
 const NetworkProvider = ({children}) => {
   const [isOnline, setisOnline] = useState({});
   useEffect(() => {
+    console.log('network render');
     NetInfo.addEventListener(handleConnectivityChange);
     return () => {};
   }, [isOnline]);

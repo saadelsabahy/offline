@@ -12,12 +12,13 @@ import {useQuery, gql} from '@apollo/client';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {useOfflineMutation} from 'react-offix-hooks';
 import NetworkProvider, {NetworkContext} from './networkProvider';
+import {addStarUpdate, removeStarUpdate} from './offlineUpdates';
 const {width, height} = Dimensions.get('screen');
 export const GET_REPOS = gql`
   {
     viewer {
       repositories(
-        first: 100
+        first: 10
         affiliations: [OWNER, COLLABORATOR, ORGANIZATION_MEMBER]
       ) {
         nodes {
@@ -107,66 +108,49 @@ const List = () => {
             __typename: 'RemoveStarPayload',
           },
         },
-        update: (
-          cache,
-          {
-            data: {
-              removeStar: {
-                starrable: {
-                  stargazers: {nodes},
-                },
+        update: (cache, {data}) =>
+          removeStarUpdate(
+            cache,
+            {data},
+            {id, totalCount, createdAt, isPrivate, name},
+            index,
+          ),
+      })
+        .then((res) => console.log('unstar success,', res))
+        .catch((e) => console.log('offline unstar error', error));
+    } else {
+      const addStarToRepo = {
+        id,
+        totalCount: totalCount + 1,
+        createdAt,
+        isPrivate,
+        name,
+        __typename: 'StargazerConnection',
+      };
+      starRepo({
+        variables: {id},
+        optimisticResponse: {
+          addStar: {
+            __typename: 'AddStarPayload',
+            starrable: {
+              __typename: 'Repository',
+              stargazers: {
+                nodes: addStarToRepo,
+                ...addStarToRepo,
               },
             },
           },
-        ) => {
-          try {
-            // console.log(data);
-            const data = cache.readQuery({query: GET_REPOS});
-
-            const {
-              viewer: {
-                __typename: viewerTypeName,
-                repositories: {
-                  nodes: cacheNodes,
-                  __typename: repositoriesTypeName,
-                },
-              },
-            } = data;
-
-            const newRepos = cacheNodes.map((t) => {
-              if (t.id === id) {
-                return {
-                  ...t,
-                  stargazers: {...t.stargazers, totalCount: +totalCount - 1},
-                };
-              } else {
-                return t;
-              }
-            });
-            console.log({newRepos});
-            cache.writeQuery({
-              query: GET_REPOS,
-              data: {
-                viewer: {
-                  __typename: viewerTypeName,
-                  repositories: {
-                    __typename: repositoriesTypeName,
-                    nodes: newRepos,
-                  },
-                },
-              },
-            });
-          } catch (error) {
-            console.log('update error', error);
-          }
         },
+        update: (cache, {data}) =>
+          addStarUpdate(
+            cache,
+            {data},
+            {id, totalCount, createdAt, isPrivate, name},
+            index,
+          ),
       })
-        .then((res) => console.log('unstar success,', res))
-        .catch((e) => console.log('offline update error', error));
-    } else {
-      starRepo({
-        variables: {id},
-      });
+        .then((res) => console.log('star success,', res))
+        .catch((e) => console.log('offline star error', error));
     }
   };
 
@@ -185,7 +169,7 @@ const List = () => {
     await reftchRepos();
     setrefreshing(false);
   };
-  console.log({loading});
+
   return (
     <View style={styles.container}>
       {loading && <Text style={styles.textStyle}>loading...</Text>}
