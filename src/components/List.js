@@ -172,6 +172,18 @@ const List = () => {
 
   return (
     <View style={styles.container}>
+      <Text>
+        {Number(125).toLocaleString('ar-EG', {
+          style: 'currency',
+          currency: 'EGP',
+        })}
+      </Text>
+      <Text>
+        {new Date().toLocaleDateString('en-US', {
+          month: 'short',
+          day: 'numeric',
+        })}
+      </Text>
       {loading && <Text style={styles.textStyle}>loading...</Text>}
       {error && !data && <Text style={styles.textStyle}>oops ...</Text>}
       {data?.viewer?.repositories?.nodes && (
